@@ -84,6 +84,26 @@ export function calculateNewMappingsForCsvColumnMapingChanged(
     return currentMapping.filter((m) => m.csvColumnName !== csvColumnName);
   }
 
+  // Check if the user selected the omit option
+  if (
+    newCsvColumnMaping.sheetId === '__omit__' &&
+    newCsvColumnMaping.sheetColumnId === '__omit__'
+  ) {
+    // Remove any existing mapping for this CSV column and add an omit mapping
+    const mappingsWithoutThisColumn = currentMapping.filter(
+      (m) => m.csvColumnName !== csvColumnName
+    );
+    return [
+      ...mappingsWithoutThisColumn,
+      {
+        csvColumnName,
+        sheetId: '__omit__',
+        sheetColumnId: '__omit__',
+        omit: true,
+      },
+    ];
+  }
+
   // Make sure we don't allow dupplicate mappings for the same sheet column
   const mappingsForOtherSheets = currentMapping.filter(
     (m) =>
@@ -148,6 +168,17 @@ export function useMappingAvailableSelectOptions(
 ) {
   const { t } = useTranslations();
 
+  const omitOption = {
+    label: t('mapper.omitColumn'),
+    value: {
+      sheetId: '__omit__',
+      sheetColumnId: '__omit__',
+    },
+    group: '',
+    className:
+      'text-red-600 font-semibold bg-red-400 hover:bg-red-100 hello-csv-omit',
+  };
+
   const options = sheetDefinitions.flatMap((sheetDefinition) =>
     sheetDefinition.columns
       .filter((column) => allowUserToMapColumn(column))
@@ -167,7 +198,11 @@ export function useMappingAvailableSelectOptions(
       }))
   );
 
-  return options.sort((a, b) => sortByGroupAndLabel(a, b, t('mapper.unused')));
+  const sortedOptions = options.sort((a, b) =>
+    sortByGroupAndLabel(a, b, t('mapper.unused'))
+  );
+
+  return [omitOption, ...sortedOptions];
 }
 
 function sortByGroupAndLabel(
@@ -204,4 +239,33 @@ export function areAllRequiredMappingsSet(
   }
 
   return true;
+}
+
+export function filterSheetDefinitionsByMappings(
+  sheetDefinitions: SheetDefinition[],
+  mappings: ColumnMapping[]
+): SheetDefinition[] {
+  return sheetDefinitions.map((sheet) => {
+    const filteredColumns = sheet.columns.filter((column) => {
+      // Keep calculated and reference columns
+      if (!allowUserToMapColumn(column)) {
+        return true;
+      }
+
+      // Check if this column has a mapping and is not omitted
+      const mapping = mappings.find(
+        (m) =>
+          m.sheetId === sheet.id && m.sheetColumnId === column.id && !m.omit
+      );
+
+      const keep = mapping != null;
+
+      return keep;
+    });
+
+    return {
+      ...sheet,
+      columns: filteredColumns,
+    };
+  });
 }

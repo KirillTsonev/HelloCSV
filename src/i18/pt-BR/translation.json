@@ -50,6 +50,7 @@
     "noData": "Nenhum dado de pré-visualização",
     "used": "Usado",
     "unused": "Não usado",
+    "omitColumn": "Omitir coluna",
     "importedColumn": "Coluna importada",
     "destinationColumn": "Coluna de destino",
     "dataPreview": "Pré-visualização de dados para {{csvHeader}}",

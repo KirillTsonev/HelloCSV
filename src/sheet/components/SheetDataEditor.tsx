@@ -31,6 +31,7 @@ import {
   DATA_COLUMN_MIN_WIDTH,
 } from '@/constants';
 import { useImporterDefinition } from '@/importer/hooks';
+import { filterSheetDefinitionsByMappings } from '@/mapper/utils';
 
 interface Props {
   sheetDefinition: SheetDefinition;
@@ -53,7 +54,7 @@ export default function SheetDataEditor({
   resetState,
   enumLabelDict,
 }: Props) {
-  const { sheetData: allData } = useImporterState();
+  const { sheetData: allData, columnMappings } = useImporterState();
   const { availableActions } = useImporterDefinition();
 
   const [selectedRows, setSelectedRows] = useState<SheetRow[]>([]);
@@ -62,6 +63,20 @@ export default function SheetDataEditor({
   const [errorColumnFilter, setErrorColumnFilter] = useState<string | null>(
     null
   );
+
+  // Filter sheet definition to only show mapped (non-omitted) columns
+  const filteredSheetDefinition = useMemo(() => {
+    if (!columnMappings) {
+      return sheetDefinition;
+    }
+
+    const [filtered] = filterSheetDefinitionsByMappings(
+      [sheetDefinition],
+      columnMappings
+    );
+
+    return filtered;
+  }, [sheetDefinition, columnMappings]);
 
   useEffect(() => {
     setSelectedRows([]); // On changing sheets
@@ -127,7 +142,7 @@ export default function SheetDataEditor({
 
     return [
       ...baseColumns,
-      ...sheetDefinition.columns.map(
+      ...filteredSheetDefinition.columns.map(
         (column) =>
           ({
             id: column.id,
@@ -140,7 +155,7 @@ export default function SheetDataEditor({
           }) as ColumnDef<SheetRow>
       ),
     ];
-  }, [sheetDefinition, selectedRows, rowData, availableActions]);
+  }, [filteredSheetDefinition, selectedRows, rowData, availableActions]);
 
   const table = useReactTable<SheetRow>({
     data: rowData,

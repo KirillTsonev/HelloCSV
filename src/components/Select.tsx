@@ -19,6 +19,7 @@ export interface SelectOption<T> {
   value: T;
   icon?: ReactNode;
   group?: string;
+  className?: string;
 }
 
 interface Props<T> {
@@ -108,7 +109,8 @@ export default function Select<T>({
     ? Object.entries(
         filteredOptions.reduce(
           (acc: Record<string, SelectOption<T>[]>, option) => {
-            const groupKey = option.group || 'ungrouped';
+            const groupKey =
+              option.group !== undefined ? option.group : 'ungrouped';
             acc[groupKey] = acc[groupKey] || [];
             acc[groupKey].push(option);
             return acc;
@@ -198,7 +200,7 @@ export default function Select<T>({
                       : String(option.value)
                   }
                   value={option.value}
-                  className="group data-focus:bg-hello-csv-primary relative flex cursor-default items-center py-2 pr-9 pl-3 text-gray-900 select-none data-focus:text-white data-focus:outline-hidden"
+                  className={`group data-focus:bg-hello-csv-primary relative flex cursor-default items-center py-2 pr-9 pl-3 text-gray-900 select-none data-focus:text-white data-focus:outline-hidden ${option.className || ''}`}
                 >
                   {option.icon}
 

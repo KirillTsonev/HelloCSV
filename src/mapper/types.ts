@@ -8,6 +8,7 @@ export interface ColumnMapping {
   csvColumnName: string;
   sheetId: string;
   sheetColumnId: string;
+  omit?: boolean;
 }
 
 export type OnDataColumnsMappedCallback = (

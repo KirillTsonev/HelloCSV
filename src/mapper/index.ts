@@ -144,7 +144,7 @@ function mapRegularColumns(
     const rows: SheetRow[] = [];
 
     const sheetMappings = mappings.filter(
-      (mapping) => mapping.sheetId === sheetDefinition.id
+      (mapping) => mapping.sheetId === sheetDefinition.id && !mapping.omit
     );
 
     data.map((row) => {
