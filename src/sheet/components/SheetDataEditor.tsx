@@ -192,7 +192,7 @@ export default function SheetDataEditor({
     <div className="flex h-full flex-col">
       <div className="flex-none">
         <SheetDataEditorActions
-          sheetDefinition={sheetDefinition}
+          sheetDefinition={filteredSheetDefinition}
           rowData={rowData}
           selectedRows={selectedRows}
           setSelectedRows={setSelectedRows}

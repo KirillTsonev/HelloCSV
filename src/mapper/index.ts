@@ -9,6 +9,7 @@ import {
   ColumnMapping,
   MappedData,
 } from '../types';
+import { filterSheetDefinitionsByMappings } from './utils';
 
 const FLOAT = /^\s*-?(\d+\.?|\.\d+|\d+\.\d+)([eE][-+]?\d+)?\s*$/;
 const MAX_FLOAT = Math.pow(2, 53);
@@ -182,12 +183,21 @@ export function getMappedData(
 
   const mappedData = mapRegularColumns(sheetDefinitions, mappings, data);
 
-  const mappedDataWithCalculatedColumns = mapCalculatedColumns(
+  // Filter sheet definitions to exclude omitted columns before calculating/referencing
+  const filteredSheetDefinitions = filterSheetDefinitionsByMappings(
     sheetDefinitions,
+    mappings
+  );
+
+  const mappedDataWithCalculatedColumns = mapCalculatedColumns(
+    filteredSheetDefinitions,
     mappedData
   );
 
-  return mapReferenceColumns(sheetDefinitions, mappedDataWithCalculatedColumns);
+  return mapReferenceColumns(
+    filteredSheetDefinitions,
+    mappedDataWithCalculatedColumns
+  );
 }
 
 export function allowUserToMapColumn(

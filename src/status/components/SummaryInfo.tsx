@@ -12,6 +12,7 @@ import { useTranslations } from '@/i18';
 import { useImporterState } from '@/importer/reducer';
 import { useImporterDefinition } from '@/importer/hooks';
 import { getSubmittedSheetData } from '@/utils';
+import { filterSheetDefinitionsByMappings } from '@/mapper/utils';
 
 type Props = {
   completedWithErrors?: boolean;
@@ -28,9 +29,18 @@ export default function SummaryInfo({
     sheetData: stateSheetData,
     importStatistics: statistics,
     sheetDefinitions,
+    columnMappings,
   } = useImporterState();
 
-  const sheetData = getSubmittedSheetData(sheetDefinitions, stateSheetData);
+  // Filter sheet definitions to exclude omitted columns
+  const filteredSheetDefinitions = columnMappings
+    ? filterSheetDefinitionsByMappings(sheetDefinitions, columnMappings)
+    : sheetDefinitions;
+
+  const sheetData = getSubmittedSheetData(
+    filteredSheetDefinitions,
+    stateSheetData
+  );
 
   const { csvDownloadMode } = useImporterDefinition();
   const { t } = useTranslations();
@@ -53,8 +63,8 @@ export default function SummaryInfo({
               </div>
               <div className="my-2 text-sm text-gray-500">
                 {rowFile
-                  ? `${t('importStatus.original')}: ${formatFileSize(rowFile?.size || 0)} · ${t('importStatus.processed')}: ${formatFileSize(getDataSize(sheetData, sheetDefinitions, enumLabelDict, csvDownloadMode))}`
-                  : `${t('importStatus.processed')}: ${formatFileSize(getDataSize(sheetData, sheetDefinitions, enumLabelDict, csvDownloadMode))}`}
+                  ? `${t('importStatus.original')}: ${formatFileSize(rowFile?.size || 0)} · ${t('importStatus.processed')}: ${formatFileSize(getDataSize(sheetData, filteredSheetDefinitions, enumLabelDict, csvDownloadMode))}`
+                  : `${t('importStatus.processed')}: ${formatFileSize(getDataSize(sheetData, filteredSheetDefinitions, enumLabelDict, csvDownloadMode))}`}
               </div>
               <div className="mt-5">
                 <Button
@@ -63,7 +73,7 @@ export default function SummaryInfo({
                   onClick={() =>
                     downloadAllSheetsAsCsv(
                       sheetData,
-                      sheetDefinitions,
+                      filteredSheetDefinitions,
                       enumLabelDict,
                       csvDownloadMode
                     )

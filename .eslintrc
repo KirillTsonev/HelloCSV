@@ -66,7 +66,11 @@
     },
     "import/resolver": {
       "typescript": {
-        "alwaysTryTypes": true
+        "alwaysTryTypes": true,
+        "project": [
+          "./tsconfig.json",
+          "./example-preact/tsconfig.json"
+        ]
       },
       "node": {
         "extensions": [
