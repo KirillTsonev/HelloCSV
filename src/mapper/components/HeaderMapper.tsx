@@ -10,8 +10,7 @@ import {
 } from '../utils';
 import HeaderMapperDataPreview from './HeaderMapperDataPreview';
 import HeaderMapperSelection from './HeaderMapperSelection';
-import { useImporterDefinition } from '@/importer/hooks';
-import { useImporterState } from '@/importer/reducer';
+import { useImporterState, useImporterStateDispatch } from '@/importer/reducer';
 
 interface Props {
   onMappingsChanged: (mappings: ColumnMapping[]) => void;
@@ -24,8 +23,8 @@ export default function HeaderMapper({
   onMappingsSet,
   onBack,
 }: Props) {
-  const { columnMappings, parsedFile } = useImporterState();
-  const { sheets: sheetDefinitions } = useImporterDefinition();
+  const { columnMappings, parsedFile, sheetDefinitions } = useImporterState();
+  const dispatch = useImporterStateDispatch();
   const { t } = useTranslations();
   const [hoveredCsvHeader, setHoveredCsvHeader] = useState<string | null>(null);
 
@@ -49,6 +48,28 @@ export default function HeaderMapper({
     if (!hoveredCsvHeader) return [];
     return calculateMappingExamples(data, hoveredCsvHeader);
   }, [hoveredCsvHeader, data]);
+
+  const handleColumnLabelEdit = (
+    sheetId: string,
+    columnId: string,
+    newLabel: string
+  ) => {
+    const updatedSheetDefinitions = sheetDefinitions.map((sheet) => {
+      if (sheet.id !== sheetId) return sheet;
+
+      return {
+        ...sheet,
+        columns: sheet.columns.map((col) =>
+          col.id === columnId ? { ...col, label: newLabel } : col
+        ),
+      };
+    });
+
+    dispatch({
+      type: 'SHEET_DEFINITIONS_UPDATED',
+      payload: { sheetDefinitions: updatedSheetDefinitions },
+    });
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -86,6 +107,8 @@ export default function HeaderMapper({
                     onMouseEnter={() => {
                       setHoveredCsvHeader(header);
                     }}
+                    sheetDefinitions={sheetDefinitions}
+                    onColumnLabelEdit={handleColumnLabelEdit}
                   />
                 );
               })}

@@ -46,8 +46,14 @@ function ImporterBody(importerDefinition: ImporterDefinitionWithDefaults) {
 
   const idPrefix = useId();
 
-  const { mode, currentSheetId, sheetData, columnMappings, validationErrors } =
-    state;
+  const {
+    mode,
+    currentSheetId,
+    sheetData,
+    columnMappings,
+    validationErrors,
+    sheetDefinitions,
+  } = state;
 
   useEffect(() => {
     if (isInitialRender.current) {
@@ -68,7 +74,7 @@ function ImporterBody(importerDefinition: ImporterDefinitionWithDefaults) {
     );
   }, [sheetData]);
 
-  const currentSheetDefinition = sheets.find(
+  const currentSheetDefinition = sheetDefinitions.find(
     (sheet) => sheet.id === currentSheetId
   )!;
 
