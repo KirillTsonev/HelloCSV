@@ -28,8 +28,9 @@ function removeMappingDuplicates(mappings: ColumnMapping[]): ColumnMapping[] {
 function buildSheetSuggestedHeaderMappings(
   sheet: SheetDefinition,
   csvHeaders: string[]
-): ColumnMapping[] {
+): { mappings: ColumnMapping[]; newColumns: SheetDefinition['columns'] } {
   const mappings: ColumnMapping[] = [];
+  const newColumns: SheetDefinition['columns'] = [];
 
   csvHeaders.forEach((header) => {
     const foundField = sheet.columns.find((column) => {
@@ -48,6 +49,21 @@ function buildSheetSuggestedHeaderMappings(
     });
 
     if (!foundField) {
+      const newColumnId = normalizeValue(header) ?? header.toLowerCase();
+      const newColumn: SheetDefinition['columns'][number] = {
+        id: newColumnId,
+        label: header,
+        type: 'string',
+      };
+
+      newColumns.push(newColumn);
+
+      mappings.push({
+        csvColumnName: header,
+        sheetId: sheet.id,
+        sheetColumnId: newColumnId,
+      });
+
       return;
     }
 
@@ -58,21 +74,37 @@ function buildSheetSuggestedHeaderMappings(
     });
   });
 
-  return mappings;
+  return { mappings, newColumns };
 }
 
 export const buildSuggestedHeaderMappings = (
   sheetDefinitions: SheetDefinition[],
   csvHeaders: string[]
-) => {
+): {
+  mappings: ColumnMapping[];
+  updatedSheetDefinitions: SheetDefinition[];
+} => {
   const headerMappings: ColumnMapping[] = [];
+  const updatedSheetDefinitions: SheetDefinition[] = [];
 
   sheetDefinitions.forEach((sheet) => {
-    const mappings = buildSheetSuggestedHeaderMappings(sheet, csvHeaders);
-    headerMappings.push(...mappings);
+    const result = buildSheetSuggestedHeaderMappings(sheet, csvHeaders);
+    headerMappings.push(...result.mappings);
+
+    if (result.newColumns.length > 0) {
+      updatedSheetDefinitions.push({
+        ...sheet,
+        columns: [...sheet.columns, ...result.newColumns],
+      });
+    } else {
+      updatedSheetDefinitions.push(sheet);
+    }
   });
 
-  return removeMappingDuplicates(headerMappings);
+  return {
+    mappings: removeMappingDuplicates(headerMappings),
+    updatedSheetDefinitions,
+  };
 };
 
 export function calculateNewMappingsForCsvColumnMapingChanged(
@@ -84,12 +116,10 @@ export function calculateNewMappingsForCsvColumnMapingChanged(
     return currentMapping.filter((m) => m.csvColumnName !== csvColumnName);
   }
 
-  // Check if the user selected the omit option
   if (
     newCsvColumnMaping.sheetId === '__omit__' &&
     newCsvColumnMaping.sheetColumnId === '__omit__'
   ) {
-    // Remove any existing mapping for this CSV column and add an omit mapping
     const mappingsWithoutThisColumn = currentMapping.filter(
       (m) => m.csvColumnName !== csvColumnName
     );
@@ -104,7 +134,6 @@ export function calculateNewMappingsForCsvColumnMapingChanged(
     ];
   }
 
-  // Make sure we don't allow dupplicate mappings for the same sheet column
   const mappingsForOtherSheets = currentMapping.filter(
     (m) =>
       (m.sheetId !== newCsvColumnMaping.sheetId ||

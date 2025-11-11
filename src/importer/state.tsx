@@ -100,20 +100,33 @@ class StateBuilder {
 
     const csvHeaders = newParsed.meta.fields!;
 
-    const suggestedMappings =
-      this.importerDefinition.customSuggestedMapper != null
-        ? await this.importerDefinition.customSuggestedMapper(
-            this.importerDefinition.sheets,
-            csvHeaders
-          )
-        : buildSuggestedHeaderMappings(
-            this.importerDefinition.sheets,
-            csvHeaders
-          );
+    let suggestedMappings;
+    let updatedSheetDefinitions = this.importerDefinition.sheets;
+
+    if (this.importerDefinition.customSuggestedMapper != null) {
+      suggestedMappings = await this.importerDefinition.customSuggestedMapper(
+        this.importerDefinition.sheets,
+        csvHeaders
+      );
+    } else {
+      const result = buildSuggestedHeaderMappings(
+        this.importerDefinition.sheets,
+        csvHeaders
+      );
+      suggestedMappings = result.mappings;
+      updatedSheetDefinitions = result.updatedSheetDefinitions;
+    }
 
     this.buildSteps.push({
       type: 'FILE_PARSED',
       payload: { parsed: newParsed, rowFile: file },
+    });
+
+    this.buildSteps.push({
+      type: 'SHEET_DEFINITIONS_UPDATED',
+      payload: {
+        sheetDefinitions: updatedSheetDefinitions,
+      },
     });
 
     this.buildSteps.push({

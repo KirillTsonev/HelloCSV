@@ -130,6 +130,10 @@ export type ImporterAction =
     } // Sets the parsed file and changes the mode to 'mapping'
   | { type: 'UPLOAD' } // Changes the mode to 'upload' - used when going back from in the mapping screen
   | { type: 'COLUMN_MAPPING_CHANGED'; payload: { mappings: ColumnMapping[] } } // Sets the proper mappings
+  | {
+      type: 'SHEET_DEFINITIONS_UPDATED';
+      payload: { sheetDefinitions: SheetDefinition[] };
+    } // Updates sheet definitions with dynamically created columns
   | { type: 'DATA_MAPPED'; payload: { mappedData: MappedData } } // Sets mapped data as sheetData, optionally runs onDataColumnsMapped callback calls validations, changes the mode to 'preview'
   | {
       type: 'CELL_CHANGED';

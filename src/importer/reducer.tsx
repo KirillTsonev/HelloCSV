@@ -73,6 +73,12 @@ export const reducer = (
         columnMappings: action.payload.mappings,
       };
     }
+    case 'SHEET_DEFINITIONS_UPDATED': {
+      return {
+        ...state,
+        sheetDefinitions: action.payload.sheetDefinitions,
+      };
+    }
     case 'DATA_MAPPED': {
       return {
         ...state,
